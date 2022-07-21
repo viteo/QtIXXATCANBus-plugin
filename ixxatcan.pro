@@ -1,8 +1,9 @@
 TARGET = qtixxatcanbus
 
-QT = core serialbus
+QT += core serialbus
 
-DISTFILES = plugin.json
+TEMPLATE = lib
+CONFIG += plugin
 
 DEFINES += QTCAN_BASE_EXPORT= QTCAN_DRIVER_EXPORT= QTCAN_STATIC_DRIVERS=1
 
@@ -13,12 +14,15 @@ DEFINES += QTCAN_BASE_EXPORT= QTCAN_DRIVER_EXPORT= QTCAN_STATIC_DRIVERS=1
 DEFINES += USE_SOCKET
 
 HEADERS += \
-    ixxatcanbackend.h \
-    CanDriver_ixxatVci.h
+    src/ixxatcanbackend.h \
+    src/CanDriver_ixxatVci.h
 
 SOURCES += \
-    main.cpp \
-    ixxatcanbackend.cpp
+    src/main.cpp \
+    src/ixxatcanbackend.cpp
+
+DISTFILES += \
+    plugin.json
 
 contains( DEFINES, USE_SOCKET ) {
 
@@ -27,7 +31,7 @@ message(building IXXAT SOCKET version!)
 HEADERS += \
 
 SOURCES += \
-    CanDriver_ixxatVciSocket.cpp
+    src/CanDriver_ixxatVciSocket.cpp
 
 INCLUDEPATH += \
     $$PWD/VciWindows_4.1/inc
@@ -45,7 +49,7 @@ message(building IXXAT OLD version!)
 HEADERS += \
 
 SOURCES += \
-    CanDriver_ixxatVci.cpp \
+    src/CanDriver_ixxatVci.cpp \
 
 
 INCLUDEPATH += \
@@ -61,7 +65,3 @@ win32 {
     INSTALL += target
     message(install in $$target.path)
 }
-
-PLUGIN_TYPE = canbus
-PLUGIN_CLASS_NAME = ixxatCanBusPlugin
-load(qt_plugin)
