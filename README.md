@@ -15,17 +15,17 @@ available in Qt applications.
 
 1. Install [IXXAT VCI V4 Windows driver software](https://www.ixxat.com/technical-support/support/windows-driver-software)
 2. Check Environment Variables were added:
- - `$(VciSDKDir)` - *<IXXAT-installation-dir>/sdk/vci*
- - `$(VciIDLDir)` - *<IXXAT-installation-dir>/sdk/idl*
+ - `$(VciSDKDir)` - *{IXXAT-installation-dir}/sdk/vci*
+ - `$(VciIDLDir)` - *{IXXAT-installation-dir}/sdk/idl*
 3. Open project
  - QT) `*.pro` Configure project using **MSVC** kit
  - VS) `*.vcxproj`  Check project Configuration Properties -> General and select your Platform Toolset
 4. Compile for Release (or Debug)
-5. Copy `qtixxatcanbus.dll` (and `qtixxatcanbus.pdb` for Debug) to *<QT installation>/5.XX.X/msvc20XX_XX/plugins/canbus* folder
+5. Copy `qtixxatcanbus.dll` (and `qtixxatcanbus.pdb` for Debug) to *{QT-installation-dir}/5.XX.X/msvc20XX_XX/plugins/canbus* folder
 
 ## Testing
 
-Launch Qt *CAN Bus example* from Qt Creator examples or directly from folder *<QT installation>\Examples\Qt-5.XX.X\serialbus\can*
+Launch Qt *CAN Bus example* from Qt Creator examples or directly from folder *{QT-installation-dir}\Examples\Qt-5.XX.X\serialbus\can*
 Tested with IXXAT USB-to-CAN v2 and USB-to-CAN v2 Pro
 
 ## Features
