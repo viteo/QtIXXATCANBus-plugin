@@ -34,13 +34,10 @@ SOURCES += \
     src/CanDriver_ixxatVciSocket.cpp
 
 INCLUDEPATH += \
-    $$PWD/VciWindows_4.1/inc
+    $$(VciSDKDir)\\inc
 
-    contains(QT_ARCH, x86_64): LIBS += "$$PWD/VciWindows_4.1/lib/x64/vcinpl2.lib"
-    contains(QT_ARCH, x86_64): LIBS += "$$PWD/VciWindows_4.1/lib/x64/Release/vciapi.lib"
-
-    contains(QT_ARCH, i386): LIBS += "$$PWD/VciWindows_4.1/lib/x32/vciapi2.lib"
-    contains(QT_ARCH, i386): LIBS += "$$PWD/VciWindows_4.1/lib/x32/Release/vciapi.lib"
+    contains(QT_ARCH, x86_64): LIBS += -L$$(VciSDKDir)\\lib\\x64\\Release -lvciapi
+    contains(QT_ARCH, i386): LIBS += -L$$(VciSDKDir)\\lib\\x32\\Release -lvciapi
 
 } else {
 
@@ -53,7 +50,7 @@ SOURCES += \
 
 
 INCLUDEPATH += \
-    $$PWD/VciWindows_4.0/inc
+    $$(VciSDKDir)\\inc
 
     equals(QT_ARCH, x86_64): LIBS += "$$PWD/VciWindows_4.0/lib/x64/vcinpl.lib"
     equals(QT_ARCH, i386): LIBS += "$$PWD/VciWindows_4.0/lib/ia32/vcinpl.lib"
