@@ -5,59 +5,30 @@ QT += core serialbus
 TEMPLATE = lib
 CONFIG += plugin
 
-DEFINES += QTCAN_BASE_EXPORT= QTCAN_DRIVER_EXPORT= QTCAN_STATIC_DRIVERS=1
+DEFINES += IXXATCAN_PLUGIN_LIB BUILD_STATIC USE_SOCKET QTCAN_STATIC_DRIVERS=1 QT_PLUGIN
 
-# set USE_SOCKET to enable use of Socket CAN instead of
-# old Vci classes.
-# Socket CAN enables multiple instances to communicate
-# with the Ixxat at the same time.
-DEFINES += USE_SOCKET
+# You can make your code fail to compile if it uses deprecated APIs.
+# In order to do so, uncomment the following line.
+#DEFINES += QT_DISABLE_DEPRECATED_BEFORE=0x060000    # disables all the APIs deprecated before Qt 6.0.0
 
-HEADERS += \
-    src/ixxatcanbackend.h \
-    src/CanDriver_ixxatVci.h
+INCLUDEPATH += $$(VciSDKDir)\\inc
+DEPENDPATH += $$(VciSDKDir)\\inc
+LIBS += -L$$(VciSDKDir)\\lib\\x64\\Release -lvciapi
 
 SOURCES += \
-    src/main.cpp \
-    src/ixxatcanbackend.cpp
+    src/IxxatCanBackend.cpp \
+    src/uuids.c
+
+HEADERS += \
+    src/IxxatCanBackend.h \
+    src/IxxatCanBusPlugin.h
 
 DISTFILES += \
     plugin.json
 
-contains( DEFINES, USE_SOCKET ) {
-
 message(building IXXAT SOCKET version!)
 
-HEADERS += \
-
-SOURCES += \
-    src/CanDriver_ixxatVciSocket.cpp
-
-INCLUDEPATH += \
-    $$(VciSDKDir)\\inc
-
-    contains(QT_ARCH, x86_64): LIBS += -L$$(VciSDKDir)\\lib\\x64\\Release -lvciapi
-    contains(QT_ARCH, i386): LIBS += -L$$(VciSDKDir)\\lib\\x32\\Release -lvciapi
-
-} else {
-
-message(building IXXAT OLD version!)
-
-HEADERS += \
-
-SOURCES += \
-    src/CanDriver_ixxatVci.cpp \
-
-
-INCLUDEPATH += \
-    $$(VciSDKDir)\\inc
-
-    equals(QT_ARCH, x86_64): LIBS += "$$PWD/VciWindows_4.0/lib/x64/vcinpl.lib"
-    equals(QT_ARCH, i386): LIBS += "$$PWD/VciWindows_4.0/lib/ia32/vcinpl.lib"
-}
-
 win32 {
-    # QMAKE_POST_LINK += copy /y $$shell_path($$OUT_PWD/plugins/canbus/qtixxatcanbus*.dll $$[QT_INSTALL_PLUGINS]/canbus)
     target.path = $$[QT_INSTALL_PLUGINS]/canbus
     INSTALL += target
     message(install in $$target.path)
