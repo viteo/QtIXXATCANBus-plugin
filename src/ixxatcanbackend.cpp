@@ -121,6 +121,9 @@ bool IxxatCanBackend::OpenSocket()
 		setCanBusStatusGetter(g);
 	}
 
+	std::function<void()> f = std::bind(&IxxatCanBackend::resetController, this);
+	setResetControllerFunction(f);
+
 	return true;
 }
 
@@ -360,6 +363,12 @@ QString IxxatCanBackend::interpretErrorFrame(const QCanBusFrame& errorFrame)
 		errorMsg.chop(1);
 
 	return errorMsg;
+}
+
+void IxxatCanBackend::resetController()
+{
+	pCanControl->StopLine();
+	pCanControl->StartLine();
 }
 
 bool IxxatCanBackend::hasBusStatus() const

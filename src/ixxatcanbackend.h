@@ -25,6 +25,7 @@ public:
     static QList<QCanBusDeviceInfo> interfaces();
 
 private:
+    void resetController();
     bool hasBusStatus() const;
     QCanBusDevice::CanBusStatus busStatus() const;
 
