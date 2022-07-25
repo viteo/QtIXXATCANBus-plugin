@@ -25,6 +25,9 @@ public:
     static QList<QCanBusDeviceInfo> interfaces();
 
 private:
+    bool hasBusStatus() const;
+    QCanBusDevice::CanBusStatus busStatus() const;
+
     bool OpenSocket();
     bool OpenControl();
     void ReceiveMessage();

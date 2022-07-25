@@ -115,6 +115,12 @@ bool IxxatCanBackend::OpenSocket()
 	if (hResult != VCI_OK)
 		return false;
 
+	if (hasBusStatus())
+	{
+		std::function<CanBusStatus()> g = std::bind(&IxxatCanBackend::busStatus, this);
+		setCanBusStatusGetter(g);
+	}
+
 	return true;
 }
 
@@ -158,7 +164,7 @@ bool IxxatCanBackend::OpenControl()
 
 	// set the acceptance filter
 	QList<QCanBusDevice::Filter> filters = qvariant_cast<QList<QCanBusDevice::Filter>>(configurationParameter(ConfigurationKey::RawFilterKey));
-    for (auto& filter : qAsConst(filters))
+	for (auto& filter : qAsConst(filters))
 	{
 		UINT32 dwCode = filter.frameId << 1 | (filter.type == QCanBusFrame::FrameType::RemoteRequestFrame);
 		UINT32 dwMask = filter.frameIdMask << 1 | (filter.type == QCanBusFrame::FrameType::RemoteRequestFrame);
@@ -230,7 +236,10 @@ bool IxxatCanBackend::writeFrame(const QCanBusFrame& newData)
 	PCANMSG pMessage;
 
 	if (!newData.isValid())
+	{
+		emit errorOccurred(QCanBusDevice::WriteError);
 		return false;
+	}
 
 	while (pWriter->AcquireWrite((PVOID*)&pMessage, &reservedFramesCount) != VCI_OK) //todo
 	{
@@ -244,10 +253,10 @@ bool IxxatCanBackend::writeFrame(const QCanBusFrame& newData)
 		pMessage->dwMsgId = newData.frameId();
 		switch (newData.frameType())
 		{
-		case QCanBusFrame::UnknownFrame:
 		case QCanBusFrame::RemoteRequestFrame:
 		case QCanBusFrame::DataFrame: pMessage->uMsgInfo.Bytes.bType = CAN_MSGTYPE_DATA; break;
-        case QCanBusFrame::InvalidFrame: // handled above with isValid()
+		case QCanBusFrame::InvalidFrame: // handled above with isValid()
+		case QCanBusFrame::UnknownFrame:
 		case QCanBusFrame::ErrorFrame: pMessage->uMsgInfo.Bytes.bType = CAN_MSGTYPE_ERROR; break;
 		}
 		pMessage->uMsgInfo.Bytes.bFlags = CAN_MAKE_MSGFLAGS(
@@ -258,13 +267,15 @@ bool IxxatCanBackend::writeFrame(const QCanBusFrame& newData)
 			newData.hasExtendedFrameFormat() // Extended frame format
 		);
 		pMessage->uMsgInfo.Bytes.bFlags2 = CAN_MAKE_MSGFLAGS2(0, 0, 0, 0, 0);
-		if (pMessage->uMsgInfo.Bits.rtr) // If RTR - payload is empty
-			for (uint32_t i = 0; i < pMessage->uMsgInfo.Bits.dlc; i++)
-				pMessage->abData[i] = 0;
-		else
-			for (uint32_t i = 0; i < pMessage->uMsgInfo.Bits.dlc; i++)
+		for (uint32_t i = 0; i < pMessage->uMsgInfo.Bits.dlc; i++)
+		{
+			pMessage->uMsgInfo.Bits.rtr ?
+				pMessage->abData[i] = 0 : // If RTR - payload is empty
 				pMessage->abData[i] = newData.payload().at(i);
-		framesToWrite = 1;
+		}
+		// for transmit messages exclusively the message type CAN_MSGTYPE_DATA is valid.
+		if (pMessage->uMsgInfo.Bytes.bType == CAN_MSGTYPE_DATA)
+			framesToWrite = 1;
 	}
 	if (pWriter->ReleaseWrite(framesToWrite) == VCI_OK)
 	{
@@ -349,4 +360,25 @@ QString IxxatCanBackend::interpretErrorFrame(const QCanBusFrame& errorFrame)
 		errorMsg.chop(1);
 
 	return errorMsg;
+}
+
+bool IxxatCanBackend::hasBusStatus() const
+{
+	return true;
+}
+
+QCanBusDevice::CanBusStatus IxxatCanBackend::busStatus() const
+{
+	CANCHANSTATUS canStatus;
+	if (!pCanChannel)
+		return QCanBusDevice::CanBusStatus::Unknown;
+	pCanChannel->GetStatus(&canStatus);
+
+	if (canStatus.sLineStatus.dwStatus & (CAN_STATUS_BUSOFF | CAN_STATUS_ININIT))
+		return QCanBusDevice::CanBusStatus::BusOff;
+	if (canStatus.sLineStatus.dwStatus & (CAN_STATUS_BUSCERR | CAN_STATUS_ERRLIM))
+		return QCanBusDevice::CanBusStatus::Error;
+	if (canStatus.sLineStatus.dwStatus & (CAN_STATUS_OVRRUN | CAN_STATUS_TXPEND))
+		return QCanBusDevice::CanBusStatus::Warning;
+	return QCanBusDevice::CanBusStatus::Good;
 }
