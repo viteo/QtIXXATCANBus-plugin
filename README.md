@@ -26,6 +26,7 @@ available in Qt applications.
 ## Testing
 
 Launch Qt *CAN Bus example* from Qt Creator examples or directly from folder *{QT-installation-dir}\Examples\Qt-5.XX.X\serialbus\can*
+
 Tested with IXXAT USB-to-CAN v2 and USB-to-CAN v2 Pro
 
 ## Features
@@ -46,7 +47,6 @@ Tested with IXXAT USB-to-CAN v2 and USB-to-CAN v2 Pro
 
 ## Documentation
 
-Starting from the QT manual and from some google search
-I follow these two links.
+QT manual and some google search
 
 - [Implementing a Custom CAN Plugin](https://doc.qt.io/qt-5/qtcanbus-backends.html)
