@@ -77,6 +77,12 @@ bool IxxatCanBackend::OpenSocket()
 	hResult = this->pBalObject->OpenSocket(this->devChannel, IID_ICanSocket, (PVOID*)&pCanSocket);
 	if (hResult != VCI_OK)
 		return false;
+
+	// calculation of the length of a tick in microseconds
+	CANCAPABILITIES canCapabilities;
+	pCanSocket->GetCapabilities(&canCapabilities);
+	tickResolution_usec = 1e6 * canCapabilities.dwTscDivisor / canCapabilities.dwClockFreq;
+
 	// create a message channel
 	hResult = pCanSocket->CreateChannel(FALSE, &pCanChannel);
 	pCanSocket->Release();
@@ -103,7 +109,6 @@ bool IxxatCanBackend::OpenSocket()
 	receiveNotifier = new QWinEventNotifier(hReaderEvent, this);
 	connect(receiveNotifier, &QWinEventNotifier::activated, this, &IxxatCanBackend::ReceiveMessage);
 	receiveNotifier->setEnabled(true);
-
 
 	hResult = pCanChannel->GetWriter(&pWriter);
 	if (hResult != VCI_OK)
@@ -306,7 +311,7 @@ void IxxatCanBackend::ReceiveMessage()
 	for (int i = 0; i < wCount; i++, pMessages++)
 	{
 		QCanBusFrame frame(pMessages->dwMsgId, QByteArray(reinterpret_cast<char*>(pMessages->abData), pMessages->uMsgInfo.Bits.dlc));
-		frame.setTimeStamp(QCanBusFrame::TimeStamp::fromMicroSeconds(pMessages->dwTime));
+		frame.setTimeStamp(QCanBusFrame::TimeStamp::fromMicroSeconds(pMessages->dwTime * tickResolution_usec));
 		frame.setExtendedFrameFormat(pMessages->uMsgInfo.Bits.ext);
 		frame.setFrameType(pMessages->uMsgInfo.Bits.rtr ? QCanBusFrame::RemoteRequestFrame : QCanBusFrame::DataFrame);
 		if (pMessages->uMsgInfo.Bits.type == CAN_MSGTYPE_ERROR)

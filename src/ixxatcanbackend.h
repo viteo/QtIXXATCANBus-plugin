@@ -42,6 +42,7 @@ private:
     PFIFOWRITER pWriter = NULL; // Channel writer
     HANDLE hReaderEvent = NULL; // Reader event
     QWinEventNotifier* receiveNotifier = nullptr;
+    float tickResolution_usec;
 };
 
 QT_END_NAMESPACE
