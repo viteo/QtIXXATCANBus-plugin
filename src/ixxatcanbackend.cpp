@@ -367,8 +367,11 @@ QString IxxatCanBackend::interpretErrorFrame(const QCanBusFrame& errorFrame)
 
 void IxxatCanBackend::resetController()
 {
-	pCanControl->StopLine();
-	pCanControl->StartLine();
+	if (pCanControl) //if we have the control, we may reset the controller
+	{
+		pCanControl->StopLine();
+		pCanControl->StartLine();
+	}
 }
 
 bool IxxatCanBackend::hasBusStatus() const
