@@ -1,5 +1,4 @@
 #include "IxxatCanBackend.h"
-#include <qexception.h>
 #include <qvariant.h>
 
 // List all devices and channels (buses)
@@ -50,21 +49,31 @@ IxxatCanBackend::IxxatCanBackend(const QString& name)
 	this->devChannel = dev.last().mid(3).toUInt(&ok);
 
 	if (!ok)
-		throw QException();
+	{
+		this->setError(QStringLiteral("Wrong device name format"), QCanBusDevice::CanBusError::ConfigurationError);
+		return;
+	}
 
 	IVciDeviceManager* pDeviceManager = NULL;	// device manager
 	IVciDevice* pDevice = NULL; // device handle
 
 	VciGetDeviceManager(&pDeviceManager);
 	pDeviceManager->OpenDevice(this->devVciId, &pDevice);
-	pDevice->OpenComponent(CLSID_VCIBAL, IID_IBalObject, (PVOID*)&this->pBalObject);
 	pDeviceManager->Release();
+
+	if (!pDevice)
+	{
+		this->setError(QStringLiteral("Device not present"), QCanBusDevice::CanBusError::ConfigurationError);
+		return;
+	}
+
+	pDevice->OpenComponent(CLSID_VCIBAL, IID_IBalObject, (PVOID*)&this->pBalObject);
 	pDevice->Release();
 }
 
 IxxatCanBackend::~IxxatCanBackend()
 {
-	this->close();
+    this->close();
 }
 
 
@@ -73,6 +82,9 @@ bool IxxatCanBackend::OpenSocket()
 	HRESULT hResult = E_FAIL;
 	pCanChannel = 0;
 	ICanSocket* pCanSocket = 0;
+
+	if (!this->pBalObject)
+		return false;
 
 	hResult = this->pBalObject->OpenSocket(this->devChannel, IID_ICanSocket, (PVOID*)&pCanSocket);
 	if (hResult != VCI_OK)
