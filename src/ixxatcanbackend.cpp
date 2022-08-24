@@ -332,6 +332,16 @@ void IxxatCanBackend::ReceiveMessage()
 		{
 			frame.setFrameType(QCanBusFrame::ErrorFrame);
 			frame.setErrorStateIndicator(true);
+			switch (pMessages->abData[0])
+			{
+			case CAN_ERROR_STUFF:
+			case CAN_ERROR_FORM:
+			case CAN_ERROR_ACK:
+			case CAN_ERROR_BIT:
+			case CAN_ERROR_CRC: frame.setError(QCanBusFrame::ProtocolViolationError); break;
+			case CAN_ERROR_OTHER:
+			default: frame.setError(QCanBusFrame::UnknownError); break;
+			}
 		}
 		frame.setLocalEcho(pMessages->uMsgInfo.Bits.srr);
 		newFrames.append(std::move(frame));
@@ -372,10 +382,21 @@ QString IxxatCanBackend::interpretErrorFrame(const QCanBusFrame& errorFrame)
 		errorMsg += QStringLiteral("Controller problem\n");
 
 	if (errorFrame.error() & QCanBusFrame::TransceiverError)
-		errorMsg = QStringLiteral("Transceiver problem");
+		errorMsg = QStringLiteral("Transceiver problem\n");
 
 	if (errorFrame.error() & QCanBusFrame::ProtocolViolationError)
-		errorMsg += QStringLiteral("Protocol violation\n");
+	{
+		errorMsg += QStringLiteral("Protocol violation: ");
+		switch (errorFrame.payload().at(0))
+		{
+		case CAN_ERROR_STUFF: errorMsg += "stuff error\n"; break;
+		case CAN_ERROR_FORM: errorMsg += "form error\n"; break;
+		case CAN_ERROR_ACK: errorMsg += "acknowledgment error\n"; break;
+		case CAN_ERROR_BIT: errorMsg += "bit error\n"; break;
+		case CAN_ERROR_CRC: errorMsg += "CRC error\n"; break;
+		default: errorMsg += "other error\n"; break;
+		}
+	}
 
 	// cut trailing '\n'
 	if (!errorMsg.isEmpty())
