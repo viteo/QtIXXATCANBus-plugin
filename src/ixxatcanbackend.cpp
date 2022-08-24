@@ -27,7 +27,7 @@ QList<QCanBusDeviceInfo> IxxatCanBackend::interfaces()
 			if (VCI_BUS_TYPE(sCaps.BusCtrlTypes[channel]) == VCI_BUS_CAN)
 				deviceList.append(
 					createDeviceInfo(
-						QString("VCI%1-CAN%2").arg(sInfo.VciObjectId.AsInt64).arg(channel),
+						QString("VCI%1-CAN%2").arg(sInfo.VciObjectId.AsInt64, channel),
 						QString(sInfo.UniqueHardwareId.AsChar),
 						QString(sInfo.Description),
 						channel, false, false)
@@ -322,6 +322,8 @@ void IxxatCanBackend::ReceiveMessage()
 		return;
 	for (int i = 0; i < wCount; i++, pMessages++)
 	{
+		if (pMessages->uMsgInfo.Bits.type != CAN_MSGTYPE_DATA && pMessages->uMsgInfo.Bits.type != CAN_MSGTYPE_ERROR)
+			continue;
 		QCanBusFrame frame(pMessages->dwMsgId, QByteArray(reinterpret_cast<char*>(pMessages->abData), pMessages->uMsgInfo.Bits.dlc));
 		frame.setTimeStamp(QCanBusFrame::TimeStamp::fromMicroSeconds(pMessages->dwTime * tickResolution_usec));
 		frame.setExtendedFrameFormat(pMessages->uMsgInfo.Bits.ext);
