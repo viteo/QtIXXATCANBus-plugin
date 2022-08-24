@@ -27,7 +27,7 @@ QList<QCanBusDeviceInfo> IxxatCanBackend::interfaces()
 			if (VCI_BUS_TYPE(sCaps.BusCtrlTypes[channel]) == VCI_BUS_CAN)
 				deviceList.append(
 					createDeviceInfo(
-						QString("VCI%1-CAN%2").arg(sInfo.VciObjectId.AsInt64, channel),
+						QString("VCI%1-CAN%2").arg(sInfo.VciObjectId.AsInt64).arg(channel),
 						QString(sInfo.UniqueHardwareId.AsChar),
 						QString(sInfo.Description),
 						channel, false, false)
