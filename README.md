@@ -1,105 +1,52 @@
-# QT-CAN Plugin for IXXAT USB adapter
+# QT CAN Bus Plugin for IXXAT USB adapters
 
-Here is an implementation of a Qt plugin for the IXXAT USB adapter V2.
-The plugin should be installed in the Qt root plugin folder then it will be
-available in any Qt CAN example tools, like "CAN Example" (see Testing).
+Here is an implementation of a Qt plugin for the IXXAT USB adapters.
+The plugin should be installed in the Qt **canbus** plugin folder then it will be
+available in Qt applications.
 
-*Tested on Windows 7.*
-
-(*any support and feedback is welcome!*)
+(*any support and feedback are welcome!*)
 
 ## Requirements
 
-- Windows (*by now tested on "Windows 7"*)
-- Qt Creator 5.13
+- Windows *(developed for Windows, for linux use SocketCAN plugin)*
+- Qt Creator *or* Visual Studio
 
-## Installation
+## Build steps
 
-follow these steps to install the plugin in Qt.
-
-[These tests used the toolchain *MSVC2017 64bit*]
-
-#### Clone the repository
-
-clone in `C:\Qt\5.13.0\Src\qtserialbus\src\plugins\canbus`
-
-#### Add project to QT CAN PLUGIN "engine"
-
-Edit the file `C:\Qt\5.13.0\Src\qtserialbus\src\plugins\canbus\canbus.pro` 
-and add **ixxatcan** as SUBDIRS in qtConfig(library).
-
-#### Compile project
-
-Open project `C:\Qt\5.13.0\Src\qtserialbus\src\plugins\canbus\ixxatcan\ixxatcan.pro` in Qt Creator and compile for **Release**
-
-#### copy plugin in Qt root folder
-
-from `C:\Qt\5.13.0\Src\qtserialbus\src\plugins\canbus\build-ixxatcan-Desktop_Qt_5_13_0_**MSVC2017_64bit**-Debug\plugins\canbus`
-copy **qtixxatcanbus.dll** and **qtixxatcanbusd.pdb**
-to `C:\Qt\5.13.0\\**msvc2017_64*\plugins\canbus`
-
-## Installation using command line
-
-I use msys2 with mingw64. So for me installtion proccess looks like:
-
-#### Clone the repository
-
-Clone repository in any place
-
-#### Building
-- Cd into clonned repository
-- Create build directory `mkdir build` and cd into it `cd build`
-- Run qmake to generate Makefile `qmake ..`
-- Run make to compile plugin `make` (On windows you probably need to run `mingw32-make`)
-
-#### Using plugin
-
-compiled dll will be in `build/plugins/`
-Copy it to your qt folder(for me it's `/share/qt5/plugins/canbus/`)
+1. Install [IXXAT VCI V4 Windows driver software](https://www.ixxat.com/technical-support/support/windows-driver-software)
+2. Check Environment Variables were added:
+ - `$(VciSDKDir)` - *{IXXAT-installation-dir}/sdk/vci*
+ - `$(VciIDLDir)` - *{IXXAT-installation-dir}/sdk/idl*
+3. Open project
+ - QT) `*.pro` Configure project using **MSVC** kit
+ - VS) `*.vcxproj`  Check project Configuration Properties -> General and select your Platform Toolset
+4. Compile for Release (or Debug)
+5. Copy `qtixxatcanbus.dll` (and `qtixxatcanbus.pdb` for Debug) to *{QT-installation-dir}/5.XX.X/msvc20XX_XX/plugins/canbus* folder
 
 ## Testing
 
-[Tested on "Window 7"]
-Launch the tool "CAN Example" from Qt Creator opening folder "C:\Qt\Examples\Qt-5.13.0\serialbus\can"
+Launch Qt *CAN Bus example* from Qt Creator examples or directly from folder *{QT-installation-dir}\Examples\Qt-5.XX.X\serialbus\can*
+
+Tested with IXXAT USB-to-CAN v2 and USB-to-CAN v2 Pro
+
+## Features
+
+- Configurable bitrate (`ConfigurationKey::BitRateKey`)
+- Receive Own flag for messages (`ConfigurationKey::ReceiveOwnKey`)
+- Remote Request messages (`QCanBusFrame::RemoteRequestFrame`)
+- CAN Filter support (`ConfigurationKey::RawFilterKey`)
+- Async message receiving (no polling thread in background)
 
 ## TODO 
 
-- Could be useful have a deploy target to copy dll and pdb files automatically in Qt folder
-- Add Linux support
+- ~~Loopback feature~~ (not implemented in hardware)
+- CAN FD support
+- Extended payload support
+- Could be useful to have a deploy target to copy dll and pdb files automatically in Qt plugin folder
 - Tests
 
 ## Documentation
 
-Starting from the QT manual and from some google search
-I follow these two links.
+QT manual and some google search
 
 - [Implementing a Custom CAN Plugin](https://doc.qt.io/qt-5/qtcanbus-backends.html)
-- [The new Qt CAN stack 2.0](http://gitlab.unique-conception.org/qt-can-2.0)
-
-Reading the first link, starting from a plugin in the folder ```C:\Qt\5.13.0\Src\qtserialbus\src\plugins\canbus```
-the generic..
-
-## Implementing a Custom CAN Plugin
-
-https://doc.qt.io/qt-5/qtcanbus-backends.html
-
-If the plugins provided by Qt are not suitable for the required target platform, 
-a custom CAN bus plugin can be implemented. The implementation follows the standard way of implementing Qt plug-ins. 
-The custom plugin must be deployed to $QTDIR/plugins/canbus.
-
-plugin.json:
-```
-{
-    "Key": "ixxatcan"
-}
-```
-
-## Starting from non-qt-standard IXXAT plugin
-
-http://gitlab.unique-conception.org/qt-can-2.0
-
-See section/repository:
-```
-Qt CAN - IXXAT USB driver 
-```
-
