@@ -26,11 +26,21 @@ QList<QCanBusDeviceInfo> IxxatCanBackend::interfaces()
 		{
 			if (VCI_BUS_TYPE(sCaps.BusCtrlTypes[channel]) == VCI_BUS_CAN)
 				deviceList.append(
+#if QT_VERSION >= 0x060000
+					createDeviceInfo(
+						QString("ixxatcanbus"),
+						QString("VCI%1-CAN%2").arg(sInfo.VciObjectId.AsInt64).arg(channel),
+						QString(sInfo.UniqueHardwareId.AsChar),
+						QString(sInfo.Description),
+						QString("VCI%1-CAN%2-alias").arg(sInfo.VciObjectId.AsInt64).arg(channel),
+						channel, false, false)
+#else
 					createDeviceInfo(
 						QString("VCI%1-CAN%2").arg(sInfo.VciObjectId.AsInt64).arg(channel),
 						QString(sInfo.UniqueHardwareId.AsChar),
 						QString(sInfo.Description),
 						channel, false, false)
+#endif
 				);
 		}
 		pDevice->Release();
@@ -44,7 +54,11 @@ QList<QCanBusDeviceInfo> IxxatCanBackend::interfaces()
 IxxatCanBackend::IxxatCanBackend(const QString& name)
 {
 	bool ok;
+#if QT_VERSION >= 0x060000
+	const QList<QStringView> dev = QStringView{name}.split(u'-');
+#else
 	auto dev = name.splitRef('-', Qt::SkipEmptyParts, Qt::CaseInsensitive);
+#endif
 	this->devVciId.AsInt64 = dev.first().mid(3).toLongLong();
 	this->devChannel = dev.last().mid(3).toUInt(&ok);
 
@@ -73,7 +87,7 @@ IxxatCanBackend::IxxatCanBackend(const QString& name)
 
 IxxatCanBackend::~IxxatCanBackend()
 {
-    this->close();
+	this->close();
 }
 
 
@@ -132,6 +146,7 @@ bool IxxatCanBackend::OpenSocket()
 	if (hResult != VCI_OK)
 		return false;
 
+#if QT_VERSION < 0x060000
 	if (hasBusStatus())
 	{
 		std::function<CanBusStatus()> g = std::bind(&IxxatCanBackend::busStatus, this);
@@ -140,6 +155,7 @@ bool IxxatCanBackend::OpenSocket()
 
 	std::function<void()> f = std::bind(&IxxatCanBackend::resetController, this);
 	setResetControllerFunction(f);
+#endif
 
 	return true;
 }
@@ -419,7 +435,11 @@ bool IxxatCanBackend::hasBusStatus() const
 	return true;
 }
 
+#if QT_VERSION >= 0x060000
+QCanBusDevice::CanBusStatus IxxatCanBackend::busStatus()
+#else
 QCanBusDevice::CanBusStatus IxxatCanBackend::busStatus() const
+#endif
 {
 	CANCHANSTATUS canStatus;
 	if (!pCanChannel)
