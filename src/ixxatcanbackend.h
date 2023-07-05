@@ -25,7 +25,7 @@ public:
     static QList<QCanBusDeviceInfo> interfaces();
 
 private:
-#if QT_VERSION >= 0x060000
+#if QT_VERSION >= QT_VERSION_CHECK(6,0,0)
     virtual void resetController() override;
     virtual bool hasBusStatus() const override;
     virtual QCanBusDevice::CanBusStatus busStatus() override;

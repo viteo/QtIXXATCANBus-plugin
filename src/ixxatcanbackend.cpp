@@ -26,7 +26,7 @@ QList<QCanBusDeviceInfo> IxxatCanBackend::interfaces()
 		{
 			if (VCI_BUS_TYPE(sCaps.BusCtrlTypes[channel]) == VCI_BUS_CAN)
 				deviceList.append(
-#if QT_VERSION >= 0x060000
+#if QT_VERSION >= QT_VERSION_CHECK(6,0,0)
 					createDeviceInfo(
 						QString("ixxatcanbus"),
 						QString("VCI%1-CAN%2").arg(sInfo.VciObjectId.AsInt64).arg(channel),
@@ -54,7 +54,7 @@ QList<QCanBusDeviceInfo> IxxatCanBackend::interfaces()
 IxxatCanBackend::IxxatCanBackend(const QString& name)
 {
 	bool ok;
-#if QT_VERSION >= 0x060000
+#if QT_VERSION >= QT_VERSION_CHECK(6,0,0)
 	const QList<QStringView> dev = QStringView{name}.split(u'-');
 #else
 	auto dev = name.splitRef('-', Qt::SkipEmptyParts, Qt::CaseInsensitive);
@@ -146,7 +146,7 @@ bool IxxatCanBackend::OpenSocket()
 	if (hResult != VCI_OK)
 		return false;
 
-#if QT_VERSION < 0x060000
+#if QT_VERSION < QT_VERSION_CHECK(6,0,0)
 	if (hasBusStatus())
 	{
 		std::function<CanBusStatus()> g = std::bind(&IxxatCanBackend::busStatus, this);
@@ -236,7 +236,12 @@ bool IxxatCanBackend::open()
 
 void IxxatCanBackend::close()
 {
-	receiveNotifier->setEnabled(false);
+    if(receiveNotifier)
+    {
+        receiveNotifier->setEnabled(false);
+        delete receiveNotifier;
+        receiveNotifier = NULL;
+    }
 	if (pReader)
 	{
 		pReader->Release();
@@ -435,7 +440,7 @@ bool IxxatCanBackend::hasBusStatus() const
 	return true;
 }
 
-#if QT_VERSION >= 0x060000
+#if QT_VERSION >= QT_VERSION_CHECK(6,0,0)
 QCanBusDevice::CanBusStatus IxxatCanBackend::busStatus()
 #else
 QCanBusDevice::CanBusStatus IxxatCanBackend::busStatus() const
