@@ -19,6 +19,7 @@ public:
 
     bool open() override;
     void close() override;
+    void closeImpl();
     bool writeFrame(const QCanBusFrame& newData) override;
     QString interpretErrorFrame(const QCanBusFrame& errorFrame) override;
 

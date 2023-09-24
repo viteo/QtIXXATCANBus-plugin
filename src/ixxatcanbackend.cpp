@@ -28,7 +28,7 @@ QList<QCanBusDeviceInfo> IxxatCanBackend::interfaces()
 				deviceList.append(
 #if QT_VERSION >= QT_VERSION_CHECK(6,0,0)
 					createDeviceInfo(
-						QString("ixxatcanbus"),
+                        QString("ixxatcan"),
 						QString("VCI%1-CAN%2").arg(sInfo.VciObjectId.AsInt64).arg(channel),
 						QString(sInfo.UniqueHardwareId.AsChar),
 						QString(sInfo.Description),
@@ -87,9 +87,8 @@ IxxatCanBackend::IxxatCanBackend(const QString& name)
 
 IxxatCanBackend::~IxxatCanBackend()
 {
-	this->close();
+    closeImpl();
 }
-
 
 bool IxxatCanBackend::OpenSocket()
 {
@@ -236,39 +235,44 @@ bool IxxatCanBackend::open()
 
 void IxxatCanBackend::close()
 {
+    closeImpl();
+}
+
+void IxxatCanBackend::closeImpl()
+{
     if(receiveNotifier)
     {
         receiveNotifier->setEnabled(false);
         delete receiveNotifier;
         receiveNotifier = NULL;
     }
-	if (pReader)
-	{
-		pReader->Release();
-		pReader = NULL;
-	}
-	if (pWriter)
-	{
-		pWriter->Release();
-		pWriter = NULL;
-	}
-	if (pCanChannel)
-	{
-		pCanChannel->Release();
-		pCanChannel = NULL;
-	}
-	if (pCanControl)
-	{
-		pCanControl->StopLine();
-		pCanControl->ResetLine();
-		pCanControl->Release();
-		pCanControl = NULL;
-	}
-	if (pBalObject)
-	{
-		pBalObject->Release();
-		pBalObject = NULL;
-	}
+    if (pReader)
+    {
+        pReader->Release();
+        pReader = NULL;
+    }
+    if (pWriter)
+    {
+        pWriter->Release();
+        pWriter = NULL;
+    }
+    if (pCanChannel)
+    {
+        pCanChannel->Release();
+        pCanChannel = NULL;
+    }
+    if (pCanControl)
+    {
+        pCanControl->StopLine();
+        pCanControl->ResetLine();
+        pCanControl->Release();
+        pCanControl = NULL;
+    }
+    if (pBalObject)
+    {
+        pBalObject->Release();
+        pBalObject = NULL;
+    }
 }
 
 bool IxxatCanBackend::writeFrame(const QCanBusFrame& newData)
