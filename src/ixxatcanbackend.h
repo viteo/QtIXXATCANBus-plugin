@@ -19,15 +19,22 @@ public:
 
     bool open() override;
     void close() override;
+    void closeImpl();
     bool writeFrame(const QCanBusFrame& newData) override;
     QString interpretErrorFrame(const QCanBusFrame& errorFrame) override;
 
     static QList<QCanBusDeviceInfo> interfaces();
 
 private:
+#if QT_VERSION >= QT_VERSION_CHECK(6,0,0)
+    virtual void resetController() override;
+    virtual bool hasBusStatus() const override;
+    virtual QCanBusDevice::CanBusStatus busStatus() override;
+#else
     void resetController();
     bool hasBusStatus() const;
     QCanBusDevice::CanBusStatus busStatus() const;
+#endif
 
     bool OpenSocket();
     bool OpenControl();
