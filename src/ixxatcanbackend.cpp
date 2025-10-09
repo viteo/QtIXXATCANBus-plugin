@@ -27,9 +27,11 @@ QList<QCanBusDeviceInfo> IxxatCanBackend::interfaces()
 			if (VCI_BUS_TYPE(sCaps.BusCtrlTypes[channel]) == VCI_BUS_CAN)
 				deviceList.append(
 					createDeviceInfo(
+						pluginKey,
 						QString("VCI%1-CAN%2").arg(sInfo.VciObjectId.AsInt64).arg(channel),
 						QString(sInfo.UniqueHardwareId.AsChar),
 						QString(sInfo.Description),
+						QString(), // alias empty
 						channel, false, false)
 				);
 		}
@@ -44,7 +46,7 @@ QList<QCanBusDeviceInfo> IxxatCanBackend::interfaces()
 IxxatCanBackend::IxxatCanBackend(const QString& name)
 {
 	bool ok;
-	auto dev = name.splitRef('-', Qt::SkipEmptyParts, Qt::CaseInsensitive);
+	auto dev = QStringView(name).split('-', Qt::SkipEmptyParts, Qt::CaseInsensitive);
 	this->devVciId.AsInt64 = dev.first().mid(3).toLongLong();
 	this->devChannel = dev.last().mid(3).toUInt(&ok);
 
@@ -132,15 +134,6 @@ bool IxxatCanBackend::OpenSocket()
 	if (hResult != VCI_OK)
 		return false;
 
-	if (hasBusStatus())
-	{
-		std::function<CanBusStatus()> g = std::bind(&IxxatCanBackend::busStatus, this);
-		setCanBusStatusGetter(g);
-	}
-
-	std::function<void()> f = std::bind(&IxxatCanBackend::resetController, this);
-	setResetControllerFunction(f);
-
 	return true;
 }
 
@@ -184,7 +177,7 @@ bool IxxatCanBackend::OpenControl()
 
 	// set the acceptance filter
 	QList<QCanBusDevice::Filter> filters = qvariant_cast<QList<QCanBusDevice::Filter>>(configurationParameter(ConfigurationKey::RawFilterKey));
-	for (auto& filter : qAsConst(filters))
+	for (auto& filter : std::as_const(filters))
 	{
 		UINT32 dwCode = filter.frameId << 1 | (filter.type == QCanBusFrame::FrameType::RemoteRequestFrame);
 		UINT32 dwMask = filter.frameIdMask << 1 | (filter.type == QCanBusFrame::FrameType::RemoteRequestFrame);
@@ -419,7 +412,7 @@ bool IxxatCanBackend::hasBusStatus() const
 	return true;
 }
 
-QCanBusDevice::CanBusStatus IxxatCanBackend::busStatus() const
+QCanBusDevice::CanBusStatus IxxatCanBackend::busStatus()
 {
 	CANCHANSTATUS canStatus;
 	if (!pCanChannel)

@@ -1,4 +1,3 @@
-#pragma once
 #ifndef IxxatCanBackend_H
 #define IxxatCanBackend_H
 
@@ -25,9 +24,9 @@ public:
     static QList<QCanBusDeviceInfo> interfaces();
 
 private:
-    void resetController();
-    bool hasBusStatus() const;
-    QCanBusDevice::CanBusStatus busStatus() const;
+    void resetController() override;
+    bool hasBusStatus() const override;
+    QCanBusDevice::CanBusStatus busStatus() override;
 
     bool OpenSocket();
     bool OpenControl();
@@ -43,6 +42,8 @@ private:
     HANDLE hReaderEvent = NULL; // Reader event
     QWinEventNotifier* receiveNotifier = nullptr;
     float tickResolution_usec;
+
+    inline static const QString pluginKey = "ixxatcan";
 };
 
 QT_END_NAMESPACE
